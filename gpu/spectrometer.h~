@@ -1,0 +1,36 @@
+#ifndef PLASMA_LINE
+#define PLASMA_LINE
+
+// system includes
+#include <stdio.h>
+#include <time.h>
+
+// CUDA includes
+#include <cuComplex.h>
+#include <cufft.h>
+#include <stdint.h>
+
+typedef struct spectrometer_data_str {
+  float *d_in;
+  uint16_t *ds_in;
+  cufftComplex *d_z_out;
+  float *d_spectrum;
+  float *d_window;
+  cufftHandle plan;
+} spectrometer_data;
+
+extern "C" void process_vector(uint16_t *d_in, int data_length, float *spectrum, int spectrum_length, spectrometer_data *d);
+extern "C" spectrometer_data *new_spectrometer_data(int data_length, int spectrum_length, float *window);
+extern "C" void free_spectrometer_data(spectrometer_data *d);
+__global__ void short_to_float(uint8_t *ds, float *df, float *w, int n_spectra, int spectrum_length);
+
+__global__ void complex_mult(cufftComplex *tx, cufftComplex *echo, cufftComplex *batch,
+                             int tx_length, int n_range_gates,
+                             int range_gate_step, int range_gate_start);
+
+__global__ void square_and_accumulate_sum(cufftComplex *z, float *spectrum);
+extern "C" void blackmann_harris( float* pOut, unsigned int num );
+
+#endif
+
+
